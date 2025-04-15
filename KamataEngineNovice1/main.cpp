@@ -17,6 +17,10 @@ void MatrixScreenPrint(const Matrix4x4& matrix, int x, int y,const char* label) 
 	Novice::ScreenPrintf(x + 4 * kColumnWidth, y, "%s", label);
 }
 
+void VectorScreenPrint(int x, int y, const Vector3& vector, const char* label)
+{
+	Novice::ScreenPrintf(x, y, "(%.2f, %.2f, %.2f) %s", vector.x, vector.y, vector.z, label);
+}
 
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -41,7 +45,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 					1.0f,4.0f,2.0f,3.0f,
 					2.0f,2.0f,1.0f,3.0f};
 
-	Vector3 transformed = Transform(point, translateMatrix);
+	Vector3 transformed = Transform(point, m1);
 
 
 
@@ -65,8 +69,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
-		MatrixScreenPrint(translateMatrix, 0, 0, "Translate");
-		MatrixScreenPrint(scaleMatrix, 0, 5 * kRowHeight, "Scale");
+		VectorScreenPrint(0, 0, transformed, "Transformed");
+		MatrixScreenPrint(translateMatrix, 0, 20, "Translate");
+		MatrixScreenPrint(scaleMatrix, 0, 5 * kRowHeight + 20, "Scale");
 		///	
 		/// ↑描画処理ここまで
 		///

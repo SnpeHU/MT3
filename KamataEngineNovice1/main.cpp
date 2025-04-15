@@ -2,7 +2,7 @@
 #include "Vector3.h"
 #include <corecrt_math.h>
 
-const char kWindowTitle[] = "GC1A_05_コウ_ホウケイ_タイトル";
+const char kWindowTitle[] = "GC2A_04_コウ_ホウケイ_タイトル";
 
 Vector3 Add(const Vector3& v1, const Vector3& v2)
 {

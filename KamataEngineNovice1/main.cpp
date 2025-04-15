@@ -1,38 +1,20 @@
 #include <Novice.h>
-#include "Vector3.h"
-#include <corecrt_math.h>
+#include "MyVector3.h"
+#include "MyMatrix4x4.h"
 
 const char kWindowTitle[] = "GC2A_04_コウ_ホウケイ_タイトル";
 
-Vector3 Add(const Vector3& v1, const Vector3& v2)
-{
-	return Vector3(v1.x + v2.x, v1.y + v2.y, v1.z + v2.z);
-}
-Vector3 Subtract(const Vector3& v1, const Vector3& v2)
-{
-	return Vector3(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
-}
-Vector3 Multiply(float scalar, const Vector3& v2)
-{
-	return Vector3(scalar * v2.x, scalar * v2.y, scalar * v2.z);
-}
-float Dot(const Vector3& v1, const Vector3& v2)
-{
-	return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-}
-float Length(const Vector3& v)
-{
-	return sqrtf(v.x * v.x + v.y * v.y + v.z * v.z);
-}
-Vector3 Normalize(const Vector3& v)
-{
-	float length = Length(v);
-	return Vector3(v.x / length, v.y / length, v.z / length);
-}
+const int kRowHeight = 20;
+const int kColumnWidth = 60;
 
-void VectorScreenPrint(int x,int y,const Vector3& vector,const char* label)
-{
-	Novice::ScreenPrintf(x, y, "(%.2f, %.2f, %.2f) %s", vector.x, vector.y, vector.z, label);
+void MatrixScreenPrint(const Matrix4x4& matrix, int x, int y,const char* label) {
+
+	for (int row = 0; row < 4; ++row) {
+		for (int column = 0; column < 4; ++column) {
+			Novice::ScreenPrintf(x + column * kColumnWidth,y + row * kRowHeight,"%6.02f",matrix.m[row][column]);
+		}
+	}
+	Novice::ScreenPrintf(x + 4 * kColumnWidth, y, "%s", label);
 }
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -45,18 +27,30 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = {0};
 	char preKeys[256] = {0};
 
-	Vector3 v1{ 1.0f,3.0f,-5.0f };
-	Vector3 v2{ 4.0f,-1.0f,2.0f };
-	float k = 4.0f;
+	Matrix4x4 m1 = {3.2f,0.7f,9.6f,4.4f,
+					5.5f,1.3f,7.8f,2.1f,
+					6.9f,8.0f,2.6f,1.0f,
+					0.5f,7.2f,5.1f,3.3f};
 
-	Vector3 resultAdd = Add(v1, v2);
-	Vector3 resultSubtract = Subtract(v1, v2);
-	Vector3 resultMultiply = Multiply(k, v1);
-	float resultDot = Dot(v1, v2);
-	float resultLength = Length(v1);
-	Vector3 resultNormalize = Normalize(v2);
+	Matrix4x4 m2 = { 4.1f,6.5f,3.3f,2.2f,
+					8.8f,0.6f,9.9f,7.7f,
+					1.1f,5.5f,6.6f,0.0f,
+					3.3f,9.9f,8.8f,2.2f };
 
-	int kRowHeight = 20;
+
+
+	Matrix4x4 resultAdd = m1.Add(m2);
+	Matrix4x4 resultSub = m1.Subtract(m2);
+	Matrix4x4 resultMul = m1.Multiply(m2);
+	Matrix4x4 InverseM1 = m1.Inverse();
+	Matrix4x4 InverseM2 = m2.Inverse();
+	Matrix4x4 transposeM1 = m1.Transpose();
+	Matrix4x4 transposeM2 = m2.Transpose();
+	Matrix4x4 identityM1;
+	identityM1 = identityM1.MakeIdentity4x4();
+
+
+ 
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -78,12 +72,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
-		VectorScreenPrint(10, 10, resultAdd, "Add:");
-		VectorScreenPrint(10, 10 + kRowHeight, resultSubtract, "Subtract:");
-		VectorScreenPrint(10, 10 + kRowHeight * 2, resultMultiply, "Multiply:");
-		Novice::ScreenPrintf(10, 10 + kRowHeight * 3, "Dot: %.2f", resultDot);
-		Novice::ScreenPrintf(10, 10 + kRowHeight * 4, "Length: %.2f", resultLength);
-		VectorScreenPrint(10, 10 + kRowHeight * 5, resultNormalize, "Normalize:");
+		MatrixScreenPrint(resultAdd, 0, 0,"Add");
+		MatrixScreenPrint(resultSub, 0, kRowHeight * 5,"Sub");
+		MatrixScreenPrint(resultMul, 0, kRowHeight * 10, "Mul");
+		MatrixScreenPrint(InverseM1, 0, kRowHeight * 15, "InverseM1");
+		MatrixScreenPrint(InverseM2, 0, kRowHeight * 20, "InverseM2");
+		MatrixScreenPrint(transposeM1, kColumnWidth * 5, kRowHeight * 5, "TransposeM1");
+		MatrixScreenPrint(transposeM2, kColumnWidth * 5, kRowHeight * 10, "TransposeM2");
+		MatrixScreenPrint(identityM1, kColumnWidth * 5, kRowHeight * 15, "IdentityM1");
 
 		///
 		/// ↑描画処理ここまで

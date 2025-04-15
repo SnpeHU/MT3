@@ -112,5 +112,6 @@
       <Filter>KamataEngine\Include</Filter>
     </ClInclude>
     <ClInclude Include="MyVector3.h" />
+    <ClInclude Include="MyMatrix4x4.h" />
   </ItemGroup>
 </Project>

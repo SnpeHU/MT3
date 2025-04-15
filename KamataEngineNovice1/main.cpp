@@ -33,19 +33,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = {0};
 	char preKeys[256] = {0};
 
-	Vector3 translate = {4.1f, 2.6f, 0.8f };
-	Vector3 scale = { 1.5f, 5.2f, 7.3f };
-
-	Matrix4x4 translateMatrix = MakeTranslateMatrix(translate);
-	Matrix4x4 scaleMatrix = MakeScaleMatrix(scale);
-	Vector3 point = { 2.3f, 3.8f,1.4f };
-
-	Matrix4x4 m1 = {1.0f,2.0f,3.0f,4.0f,
-					3.0f,1.0f,1.0f,2.0f,
-					1.0f,4.0f,2.0f,3.0f,
-					2.0f,2.0f,1.0f,3.0f};
-
-	Vector3 transformed = Transform(point, m1);
+	Vector3 rotate = { 0.4f,1.43f,-0.8f };
+	Matrix4x4 rotateXMatrix = MakeRotateXMatrix(rotate.x);
+	Matrix4x4 rotateYMatrix = MakeRotateYMatrix(rotate.y);
+	Matrix4x4 rotateZMatrix = MakeRotateZMatrix(rotate.z);
+	Matrix4x4 rotateXYZMatrix = Multiply(rotateXMatrix, Multiply(rotateYMatrix, rotateZMatrix));
 
 
 
@@ -69,9 +61,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
-		VectorScreenPrint(0, 0, transformed, "Transformed");
-		MatrixScreenPrint(translateMatrix, 0, 20, "Translate");
-		MatrixScreenPrint(scaleMatrix, 0, 5 * kRowHeight + 20, "Scale");
+		MatrixScreenPrint(rotateXMatrix, 0, 0, "rotateXMatrix");
+		MatrixScreenPrint(rotateYMatrix, 0, kRowHeight * 5, "rotateYMatrix");
+		MatrixScreenPrint(rotateZMatrix, 0, kRowHeight * 10, "rotateZMatrix");
+		MatrixScreenPrint(rotateXYZMatrix, 0, kRowHeight * 15, "rotateXYZMatrix");
 		///	
 		/// ↑描画処理ここまで
 		///

@@ -17,6 +17,8 @@ void MatrixScreenPrint(const Matrix4x4& matrix, int x, int y,const char* label) 
 	Novice::ScreenPrintf(x + 4 * kColumnWidth, y, "%s", label);
 }
 
+
+
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -27,30 +29,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = {0};
 	char preKeys[256] = {0};
 
-	Matrix4x4 m1 = {3.2f,0.7f,9.6f,4.4f,
-					5.5f,1.3f,7.8f,2.1f,
-					6.9f,8.0f,2.6f,1.0f,
-					0.5f,7.2f,5.1f,3.3f};
+	Vector3 translate = {4.1f, 2.6f, 0.8f };
+	Vector3 scale = { 1.5f, 5.2f, 7.3f };
 
-	Matrix4x4 m2 = { 4.1f,6.5f,3.3f,2.2f,
-					8.8f,0.6f,9.9f,7.7f,
-					1.1f,5.5f,6.6f,0.0f,
-					3.3f,9.9f,8.8f,2.2f };
+	Matrix4x4 translateMatrix = MakeTranslateMatrix(translate);
+	Matrix4x4 scaleMatrix = MakeScaleMatrix(scale);
+	Vector3 point = { 2.3f, 3.8f,1.4f };
 
+	Matrix4x4 m1 = {1.0f,2.0f,3.0f,4.0f,
+					3.0f,1.0f,1.0f,2.0f,
+					1.0f,4.0f,2.0f,3.0f,
+					2.0f,2.0f,1.0f,3.0f};
 
-
-	Matrix4x4 resultAdd = m1.Add(m2);
-	Matrix4x4 resultSub = m1.Subtract(m2);
-	Matrix4x4 resultMul = m1.Multiply(m2);
-	Matrix4x4 InverseM1 = m1.Inverse();
-	Matrix4x4 InverseM2 = m2.Inverse();
-	Matrix4x4 transposeM1 = m1.Transpose();
-	Matrix4x4 transposeM2 = m2.Transpose();
-	Matrix4x4 identityM1;
-	identityM1 = identityM1.MakeIdentity4x4();
+	Vector3 transformed = Transform(point, translateMatrix);
 
 
- 
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -72,16 +65,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
-		MatrixScreenPrint(resultAdd, 0, 0,"Add");
-		MatrixScreenPrint(resultSub, 0, kRowHeight * 5,"Sub");
-		MatrixScreenPrint(resultMul, 0, kRowHeight * 10, "Mul");
-		MatrixScreenPrint(InverseM1, 0, kRowHeight * 15, "InverseM1");
-		MatrixScreenPrint(InverseM2, 0, kRowHeight * 20, "InverseM2");
-		MatrixScreenPrint(transposeM1, kColumnWidth * 5, kRowHeight * 5, "TransposeM1");
-		MatrixScreenPrint(transposeM2, kColumnWidth * 5, kRowHeight * 10, "TransposeM2");
-		MatrixScreenPrint(identityM1, kColumnWidth * 5, kRowHeight * 15, "IdentityM1");
-
-		///
+		MatrixScreenPrint(translateMatrix, 0, 0, "Translate");
+		MatrixScreenPrint(scaleMatrix, 0, 5 * kRowHeight, "Scale");
+		///	
 		/// ↑描画処理ここまで
 		///
 

@@ -39,6 +39,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Matrix4x4 worldMatrix = MakeAffineMatrix( scale, rotate, translate);
 
+	Matrix4x4 orthographicMatrix = MakeOrthographicMatrix(-160.f, 160.f, 200.f, 300.0f, 0.0f, 1000.0f);
+	Matrix4x4 perspectiveMatrix = MakePerspectiveMatrix(0.63f, 1.33f, 0.1f, 1000.0f);
+	Matrix4x4 viewportMatrix = MakeViewportMatrix(100.0f, 200.0f, 600.0f, 300.0f, 0.0f, 1.0f);
+
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
 		// フレームの開始
@@ -59,7 +63,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓描画処理ここから
 		///
-		MatrixScreenPrint(worldMatrix, 0, 0, "WorldMatrix");
+		MatrixScreenPrint(orthographicMatrix, 0, 0, "orthographicMatrix");
+		MatrixScreenPrint(perspectiveMatrix, 0, kRowHeight * 5, "perspectiveMatrix");
+		MatrixScreenPrint(viewportMatrix, 0, kRowHeight * 10, "viewportMatrix");
 		///
 		/// ↑描画処理ここまで
 		///

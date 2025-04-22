@@ -32,6 +32,20 @@ public:
 		return result;
 	}
 
+	Matrix4x4 operator+(const Matrix4x4& matrix) const
+	{
+		Matrix4x4 result;
+		for (int i = 0; i < 4; ++i)
+		{
+			for (int j = 0; j < 4; ++j)
+			{
+				result.m[i][j] = m[i][j] + matrix.m[i][j];
+			}
+		}
+		return result;
+	}
+
+
 	Matrix4x4 Subtract(const Matrix4x4& matrix) const
 	{
 		Matrix4x4 result;
@@ -44,6 +58,37 @@ public:
 		}
 		return result;
 	}
+
+	Matrix4x4 operator-(const Matrix4x4& matrix) const
+	{
+		Matrix4x4 result;
+		for (int i = 0; i < 4; ++i)
+		{
+			for (int j = 0; j < 4; ++j)
+			{
+				result.m[i][j] = m[i][j] - matrix.m[i][j];
+			}
+		}
+		return result;
+	}
+
+	//行列の積
+	Matrix4x4 operator*(const Matrix4x4& matrix) const
+	{
+		Matrix4x4 result = {};
+		for (int i = 0; i < 4; ++i)
+		{
+			for (int j = 0; j < 4; ++j)
+			{
+				for (int k = 0; k < 4; ++k)
+				{
+					result.m[i][j] += m[i][k] * matrix.m[k][j];
+				}
+			}
+		}
+		return result;
+	}
+	
 
 	//Matrix4x4 Multiply(const Matrix4x4& matrix) const
 	//{
@@ -111,6 +156,7 @@ public:
 
 	}
 
+	//転置行列を作成する関数
 	Matrix4x4 Transpose() const
 	{
 		Matrix4x4 result;
@@ -124,6 +170,7 @@ public:
 		return result;
 	}
 
+	//単位行列を作成する関数
 	Matrix4x4 MakeIdentity4x4() const
 	{
 		Matrix4x4 result;
@@ -136,8 +183,11 @@ public:
 		}
 		return result;
 	}
-
 };
+
+
+
+
 
 
 inline Matrix4x4 Multiply(const Matrix4x4& m1,const Matrix4x4& m2)

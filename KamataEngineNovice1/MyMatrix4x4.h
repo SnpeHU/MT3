@@ -62,7 +62,7 @@ public:
 	//}
 
 	//逆行列
-	Matrix4x4 Inverse() const
+	inline Matrix4x4 Inverse() const
 	{
 		Matrix4x4 result = {};
 		float det = (m[0][0] * m[1][1] * m[2][2] * m[3][3]) + (m[0][0] * m[1][2] * m[2][3] * m[3][1]) + (m[0][0] * m[1][3] * m[2][1] * m[3][2])

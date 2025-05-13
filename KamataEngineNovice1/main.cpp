@@ -33,11 +33,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = {0};
 	char preKeys[256] = {0};
 
-	Vector3 rotate = { 0.4f,1.43f,-0.8f };
-	Vector3 scale = { 1.2f,0.79f,-2.1f };
-	Vector3 translate = { 2.7f,-4.15f,1.57f };
+	Vector3 rotate = { 0.0f,0.0f,0.0f };
+	Vector3 scale = { 1.0f,1.0f,1.0f };
+	Vector3 translate = { 0.0f,0.0f,0.0f };
+
+	Vector3 cameraPostion{ 0.0f,0.0f,20.0f };
 
 	Matrix4x4 worldMatrix = MakeAffineMatrix( scale, rotate, translate);
+	Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, { 0.0f,0.0f,0.0f }, cameraPostion);
+	Matrix4x4 viewMatrix = cameraMatrix.Inverse();
+	//Matrix4x4 projectionMatrix = MakeP
+	//Matrix4x4 worldViewProjectionMatirx = Multiply(worldMatrix,Multiply(viewMatrix,pro))
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {

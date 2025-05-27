@@ -7,6 +7,10 @@ const char kWindowTitle[] = "GC2A_04_コウ_ホウケイ_タイトル";
 const int kRowHeight = 20;
 const int kColumnWidth = 60;
 
+int kWindowWidth = 1280;
+int kWindowHeight = 720;
+
+
 void MatrixScreenPrint(const Matrix4x4& matrix, int x, int y,const char* label) {
 
 	for (int row = 0; row < 4; ++row) {
@@ -27,22 +31,30 @@ void VectorScreenPrint(int x, int y, const Vector3& vector, const char* label)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	// ライブラリの初期化
-	Novice::Initialize(kWindowTitle, 1280, 720);
+	Novice::Initialize(kWindowTitle, kWindowWidth, kWindowHeight);
 
 	// キー入力結果を受け取る箱
 	char keys[256] = {0};
 	char preKeys[256] = {0};
 
+	Vector3 v1{ 1.2f,-3.9f,2.5f };
+	Vector3 v2{ 2.8f,0.4f,-1.3f };
+	Vector3 cross = Cross(v1, v2);
+
 	Vector3 rotate = { 0.0f,0.0f,0.0f };
 	Vector3 scale = { 1.0f,1.0f,1.0f };
 	Vector3 translate = { 0.0f,0.0f,0.0f };
 
-	Vector3 cameraPostion{ 0.0f,0.0f,20.0f };
+	Vector3 cameraPostion{ 0.0f,0.0f,-20.0f };
 
-	Matrix4x4 worldMatrix = MakeAffineMatrix( scale, rotate, translate);
-	Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, { 0.0f,0.0f,0.0f }, cameraPostion);
-	Matrix4x4 viewMatrix = cameraMatrix.Inverse();
-	//Matrix4x4 projectionMatrix = MakeP
+	
+	Vector3 kLocalVertices[3] = {
+		{ -1.0f, -1.0f, 0.0f },
+		{  1.0f, -1.0f, 0.0f },
+		{  0.0f,  1.0f, 0.0f }
+	};
+	Vector3 screenVertices[3];
+
 	//Matrix4x4 worldViewProjectionMatirx = Multiply(worldMatrix,Multiply(viewMatrix,pro))
 
 	// ウィンドウの×ボタンが押されるまでループ
@@ -61,11 +73,34 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↑更新処理ここまで
 		///
+		
+		//旋转
+		Matrix4x4 worldMatrix = MakeAffineMatrix(scale, rotate, translate);
+		Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, { 0.0f,0.0f,0.0f }, cameraPostion);
+		Matrix4x4 viewMatrix = cameraMatrix.Inverse();
+		Matrix4x4 projectionMatrix = MakePerspectiveMatrix(0.45f, float(kWindowWidth) / float(kWindowHeight), 0.1f, 100.0f);
+		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
+
+		//rotate.x += 0.01f;
+		rotate.y += 0.02f;
+		//rotate.z += 0.01f;
+		for (uint32_t i = 0; i < 3; i++)
+		{
+			Vector3 ndcVertex = Transform(kLocalVertices[i], worldViewProjectionMatrix);
+			screenVertices[i] = Transform(ndcVertex, viewportMatrix);
+		}
 
 		///
 		/// ↓描画処理ここから
 		///
-		MatrixScreenPrint(worldMatrix, 0, 0, "WorldMatrix");
+		VectorScreenPrint(0, 0, cross,"Cross");
+		Novice::DrawTriangle(
+			int(screenVertices[0].x), int(screenVertices[0].y),
+			int(screenVertices[1].x), int(screenVertices[1].y),
+			int(screenVertices[2].x), int(screenVertices[2].y),
+			RED, kFillModeSolid
+		);
 		///
 		/// ↑描画処理ここまで
 		///

@@ -69,7 +69,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓更新処理ここから
 		///
-
+		if (preKeys[DIK_UP]) {
+			translate.z += 0.1f;
+		}
+		if (preKeys[DIK_DOWN]) {
+			translate.z -= 0.1f;
+		}
+		if (preKeys[DIK_LEFT]) {
+			translate.x -= 0.05f;
+		}
+		if (preKeys[DIK_RIGHT]) {
+			translate.x += 0.05f;
+		}
 		///
 		/// ↑更新処理ここまで
 		///

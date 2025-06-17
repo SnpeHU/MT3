@@ -197,6 +197,18 @@ Vector3 ClosestPoint(const Vector3& point, const Segment& segment)
 	}
 }
 
+float Length(const Vector3& v1, const Vector3& v2)
+{
+	Vector3 diff = { v1.x - v2.x, v1.y - v2.y, v1.z - v2.z };
+	return std::sqrt(diff.x * diff.x + diff.y * diff.y + diff.z * diff.z);
+}
+
+bool IsCollision(const Sphere& sphereA, const Sphere& sphereB) {
+	float distance = Length(sphereA.center, sphereB.center);
+	float radiusSum = sphereA.radius + sphereB.radius;
+	return distance <= radiusSum;
+}
+
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -216,12 +228,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 cameraRotate{ 0.3f,0.0f,0.0f };
 
 
-	Segment segment{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
-	Vector3 point{ -1.5f,0.6f,0.6f };
+	Vector3 position1{ -1.5f,0.6f,0.6f };
+	Vector3 position2{ 1.5f,0.6f,0.6f };
 
-	Vector3 project = Project((point-segment.origin), segment.diff);
 	
-
+	int color = WHITE;
 
 
 
@@ -246,8 +257,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 
-		Vector3 start = Transform(Transform(segment.origin, worldViewProjectionMatrix), viewportMatrix);
-		Vector3 end = Transform(Transform(segment.origin+segment.diff, worldViewProjectionMatrix), viewportMatrix);
+
 		///
 		/// ↑更新処理ここまで
 		///
@@ -255,23 +265,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		//cameraRotate.z += 0.01f; // カメラのY軸回転を更新
 		//rotate.y += 0.02f;
-		Vector3 closestPoint = ClosestPoint(point, segment);
-		Sphere pointSphere{ point, 0.01f };
-		Sphere closestPointSphere{ closestPoint,0.01f };
+		Sphere SphereA{ position1, 0.01f };
+		Sphere SphereB{ position2, 0.01f };
+
+		
+		if (IsCollision(SphereA, SphereB)) {
+			color = RED;
+		}
+		else {
+			color = WHITE;
+		}
+
+
 
 		///
 		/// ↓描画処理ここから
 		///
 		DrawGrid(worldViewProjectionMatrix, viewportMatrix);
-		DrawSphere(pointSphere, worldViewProjectionMatrix, viewportMatrix,RED);
-		DrawSphere(closestPointSphere, worldViewProjectionMatrix, viewportMatrix, BLACK);
-		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), WHITE);
-		ImGui::Begin("Debug");
-		ImGui::InputFloat3("Point", &point.x, "%.3f");
-		ImGui::InputFloat3("Segment Origin", &segment.origin.x, "%.3f");
-		ImGui::InputFloat3("Segment Diff", &segment.diff.x, "%.3f");
-		ImGui::InputFloat3("Project", &project.x,"%.3f",ImGuiInputTextFlags_ReadOnly);
-		
+		DrawSphere(SphereA, worldViewProjectionMatrix, viewportMatrix,WHITE);
+		DrawSphere(SphereB, worldViewProjectionMatrix, viewportMatrix, color);
+
+
+		ImGui::Begin("Debug");		
 		ImGui::End();
 		///
 		/// ↑描画処理ここまで

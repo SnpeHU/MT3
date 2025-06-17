@@ -93,8 +93,8 @@ void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMa
 
 void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix,int color) {
 	const uint32_t kCircleSegments = 36; // 円の分割数
-	const float kLonStep = 2.0f * pi_v<float> / kCircleSegments; // 経度分割一つ分の角度
-	const float kLatStep = 2.0f * pi_v<float> / kCircleSegments;  // 緯度分割一つ分の角度
+	const float kLonStep = 2.0f * pi_v<float> / 24; // 経度分割一つ分の角度
+	const float kLatStep = 2.0f * pi_v<float> / 24;  // 緯度分割一つ分の角度
 
 	for (uint32_t lat = 0; lat <= kCircleSegments; ++lat) {
 		float theta = -pi_v<float> / 2.0f + kLatStep * lat; // 緯度角
@@ -228,13 +228,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 cameraRotate{ 0.3f,0.0f,0.0f };
 
 
-	Vector3 position1{ -1.5f,0.6f,0.6f };
-	Vector3 position2{ 1.5f,0.6f,0.6f };
+	Vector3 position1{ -1.5f,0.0f,1.5f };
+	Vector3 position2{ 0.0f,0.0f,0.0f };
 
 	
 	int color = WHITE;
 
-
+	Sphere sphereA{ position1, 0.5f };
+	Sphere sphereB{ position2, 1.0f };
 
 
 	// ウィンドウの×ボタンが押されるまでループ
@@ -265,8 +266,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		//cameraRotate.z += 0.01f; // カメラのY軸回転を更新
 		//rotate.y += 0.02f;
-		Sphere sphereA{ position1, 1.0f };
-		Sphere sphereB{ position2, 1.0f };
+
 
 		
 		if (IsCollision(sphereA, sphereB)) {

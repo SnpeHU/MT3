@@ -265,11 +265,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		//cameraRotate.z += 0.01f; // カメラのY軸回転を更新
 		//rotate.y += 0.02f;
-		Sphere SphereA{ position1, 0.01f };
-		Sphere SphereB{ position2, 0.01f };
+		Sphere sphereA{ position1, 1.0f };
+		Sphere sphereB{ position2, 1.0f };
 
 		
-		if (IsCollision(SphereA, SphereB)) {
+		if (IsCollision(sphereA, sphereB)) {
 			color = RED;
 		}
 		else {
@@ -282,11 +282,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 		DrawGrid(worldViewProjectionMatrix, viewportMatrix);
-		DrawSphere(SphereA, worldViewProjectionMatrix, viewportMatrix,WHITE);
-		DrawSphere(SphereB, worldViewProjectionMatrix, viewportMatrix, color);
+		DrawSphere(sphereA, worldViewProjectionMatrix, viewportMatrix,WHITE);
+		DrawSphere(sphereB, worldViewProjectionMatrix, viewportMatrix, color);
 
 
-		ImGui::Begin("Debug");		
+		ImGui::Begin("Sphere");
+		ImGui::DragFloat3("Center", &sphereB.center.x, 0.01f);
+		ImGui::DragFloat("Radius", &sphereB.radius, 0.01f);
+		ImGui::End();
+		ImGui::Begin("Camera");
+		ImGui::DragFloat3("Position", &cameraPostion.x, 0.01f);
+		ImGui::DragFloat3("Rotate", &cameraRotate.x, 0.01f);
 		ImGui::End();
 		///
 		/// ↑描画処理ここまで

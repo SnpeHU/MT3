@@ -2,6 +2,7 @@
 #include "MyVector3.h"
 #include "MyMatrix4x4.h"
 #include <numbers>
+
 #include <imgui.h>
 using namespace std::numbers;
 
@@ -18,6 +19,22 @@ struct Sphere
 {
 	Vector3 center;
 	float radius;
+};
+
+struct Line {
+	Vector3 origin; // 始点
+	Vector3 diff; // 方向ベクトル
+};
+
+struct Ray {
+	Vector3 origin;
+	Vector3 diff;
+};
+
+struct Segment
+{
+	Vector3 origin;
+	Vector3 diff;
 };
 
 void MatrixScreenPrint(const Matrix4x4& matrix, int x, int y,const char* label) {
@@ -74,7 +91,7 @@ void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMa
 
 }
 
-void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix) {
+void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix,int color) {
 	const uint32_t kCircleSegments = 36; // 円の分割数
 	const float kLonStep = 2.0f * pi_v<float> / kCircleSegments; // 経度分割一つ分の角度
 	const float kLatStep = 2.0f * pi_v<float> / kCircleSegments;  // 緯度分割一つ分の角度
@@ -102,7 +119,7 @@ void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, con
 			Vector3 sp0 = Transform(Transform(p0, viewProjectionMatrix), viewportMatrix);
 			Vector3 sp1 = Transform(Transform(p1, viewProjectionMatrix), viewportMatrix);
 
-			Novice::DrawLine(int(sp0.x), int(sp0.y), int(sp1.x), int(sp1.y), 0xFFFFFFFF);
+			Novice::DrawLine(int(sp0.x), int(sp0.y), int(sp1.x), int(sp1.y), color);
 		}
 	}
 
@@ -129,8 +146,54 @@ void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, con
 			Vector3 sp0 = Transform(Transform(p0, viewProjectionMatrix), viewportMatrix);
 			Vector3 sp1 = Transform(Transform(p1, viewProjectionMatrix), viewportMatrix);
 
-			Novice::DrawLine(int(sp0.x), int(sp0.y), int(sp1.x), int(sp1.y), 0xFFFFFFFF);
+			Novice::DrawLine(int(sp0.x), int(sp0.y), int(sp1.x), int(sp1.y), color);
 		}
+	}
+}
+
+Vector3 Project(const Vector3& v1,const Vector3& v2)
+{
+	// v2の長さ
+	float length = std::sqrt(v2.x * v2.x + v2.y * v2.y + v2.z * v2.z);
+	if (length == 0.0f) {
+		return { 0.0f, 0.0f, 0.0f }; // ゼロベクトルの場合は投影できないのでゼロベクトルを返す
+	}
+	// v2を単位ベクトルにする
+	Vector3 unitV2 = { v2.x / length, v2.y / length, v2.z / length };
+	// v1をv2に投影する
+	float dotProduct = v1.x * unitV2.x + v1.y * unitV2.y + v1.z * unitV2.z;
+	return { unitV2.x * dotProduct, unitV2.y * dotProduct, unitV2.z * dotProduct };
+}
+
+Vector3 ClosestPoint(const Vector3& point, const Segment& segment)
+{
+	// セグメントの始点から終点へのベクトル
+	Vector3 segmentVector = { segment.diff.x - segment.origin.x, segment.diff.y - segment.origin.y, segment.diff.z - segment.origin.z };
+	// セグメントの長さの二乗
+	float segmentLengthSquared = segmentVector.x * segmentVector.x + segmentVector.y * segmentVector.y + segmentVector.z * segmentVector.z;
+	if (segmentLengthSquared == 0.0f) {
+		// セグメントがゼロ長の場合、始点を返す
+		return segment.origin;
+	}
+	// 点からセグメントの始点へのベクトル
+	Vector3 pointToOrigin = { point.x - segment.origin.x, point.y - segment.origin.y, point.z - segment.origin.z };
+	// セグメント上の点までの投影係数
+	float t = (pointToOrigin.x * segmentVector.x + pointToOrigin.y * segmentVector.y + pointToOrigin.z * segmentVector.z) / segmentLengthSquared;
+	if (t < 0.0f) {
+		// 投影が始点より前の場合、始点を返す
+		return segment.origin;
+	}
+	else if (t > 1.0f) {
+		// 投影が終点より後の場合、終点を返す
+		return { segment.diff.x,segment.diff.y,segment.diff.z };
+	}
+	else {
+		// セグメント上の最近傍点を計算して返す
+		return {
+			segment.origin.x + t * segmentVector.x,
+			segment.origin.y + t * segmentVector.y,
+			segment.origin.z + t * segmentVector.z
+		};
 	}
 }
 
@@ -152,17 +215,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 cameraPostion{ 0.0f,4.0f,-10.0f };
 	Vector3 cameraRotate{ 0.3f,0.0f,0.0f };
 
-	
-	//Vector3 kLocalVertices[3] = {
-	//	{ -1.0f, -1.0f, 0.0f },
-	//	{  1.0f, -1.0f, 0.0f },
-	//	{  0.0f,  1.0f, 0.0f }
-	//};
-	//Vector3 screenVertices[3];
 
-	Sphere sphere;
-	sphere.center = { 0.0f, 0.0f, 0.0f };
-	sphere.radius = 1.0f;
+	Segment segment{ {-2.0f,-1.0f,0.0f},{3.0f,2.0f,2.0f} };
+	Vector3 point{ -1.5f,0.6f,0.6f };
+
+	Vector3 project = Project((point-segment.origin), segment.diff);
+	
+
+
+
+
 
 	// ウィンドウの×ボタンが押されるまでループ
 	while (Novice::ProcessMessage() == 0) {
@@ -184,7 +246,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 
-		
+		Vector3 start = Transform(Transform(segment.origin, worldViewProjectionMatrix), viewportMatrix);
+		Vector3 end = Transform(Transform(segment.origin+segment.diff, worldViewProjectionMatrix), viewportMatrix);
 		///
 		/// ↑更新処理ここまで
 		///
@@ -192,19 +255,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		//cameraRotate.z += 0.01f; // カメラのY軸回転を更新
 		//rotate.y += 0.02f;
+		Vector3 closestPoint = ClosestPoint(point, segment);
+		Sphere pointSphere{ point, 0.01f };
+		Sphere closestPointSphere{ closestPoint,0.01f };
 
 		///
 		/// ↓描画処理ここから
 		///
 		DrawGrid(worldViewProjectionMatrix, viewportMatrix);
-		DrawSphere(sphere, worldViewProjectionMatrix, viewportMatrix);
-		ImGui::Begin("Sphere");
-		ImGui::DragFloat3("Center", &sphere.center.x, 0.01f);
-		ImGui::DragFloat("Radius", &sphere.radius, 0.01f);
-		ImGui::End();
-		ImGui::Begin("Camera");
-		ImGui::DragFloat3("Position", &cameraPostion.x, 0.01f);
-		ImGui::DragFloat3("Rotate", &cameraRotate.x, 0.01f);
+		DrawSphere(pointSphere, worldViewProjectionMatrix, viewportMatrix,RED);
+		DrawSphere(closestPointSphere, worldViewProjectionMatrix, viewportMatrix, BLACK);
+		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), WHITE);
+		ImGui::Begin("Debug");
+		ImGui::InputFloat3("Point", &point.x, "%.3f");
+		ImGui::InputFloat3("Segment Origin", &segment.origin.x, "%.3f");
+		ImGui::InputFloat3("Segment Diff", &segment.diff.x, "%.3f");
+		ImGui::InputFloat3("Project", &project.x,"%.3f",ImGuiInputTextFlags_ReadOnly);
+		
 		ImGui::End();
 		///
 		/// ↑描画処理ここまで

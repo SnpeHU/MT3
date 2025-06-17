@@ -2,7 +2,7 @@
 #include "MyVector3.h"
 #include "MyMatrix4x4.h"
 #include <numbers>
-
+#include <algorithm>
 #include <imgui.h>
 using namespace std::numbers;
 
@@ -167,34 +167,20 @@ Vector3 Project(const Vector3& v1,const Vector3& v2)
 
 Vector3 ClosestPoint(const Vector3& point, const Segment& segment)
 {
-	// セグメントの始点から終点へのベクトル
-	Vector3 segmentVector = { segment.diff.x - segment.origin.x, segment.diff.y - segment.origin.y, segment.diff.z - segment.origin.z };
-	// セグメントの長さの二乗
-	float segmentLengthSquared = segmentVector.x * segmentVector.x + segmentVector.y * segmentVector.y + segmentVector.z * segmentVector.z;
+
+	Vector3 segmentVector = segment.diff - segment.origin;
+
+	Vector3 pointToOrigin = point - segment.origin;
+
+	float segmentLengthSquared = segmentVector * segmentVector;
 	if (segmentLengthSquared == 0.0f) {
-		// セグメントがゼロ長の場合、始点を返す
 		return segment.origin;
 	}
-	// 点からセグメントの始点へのベクトル
-	Vector3 pointToOrigin = { point.x - segment.origin.x, point.y - segment.origin.y, point.z - segment.origin.z };
-	// セグメント上の点までの投影係数
-	float t = (pointToOrigin.x * segmentVector.x + pointToOrigin.y * segmentVector.y + pointToOrigin.z * segmentVector.z) / segmentLengthSquared;
-	if (t < 0.0f) {
-		// 投影が始点より前の場合、始点を返す
-		return segment.origin;
-	}
-	else if (t > 1.0f) {
-		// 投影が終点より後の場合、終点を返す
-		return { segment.diff.x,segment.diff.y,segment.diff.z };
-	}
-	else {
-		// セグメント上の最近傍点を計算して返す
-		return {
-			segment.origin.x + t * segmentVector.x,
-			segment.origin.y + t * segmentVector.y,
-			segment.origin.z + t * segmentVector.z
-		};
-	}
+	// 投影系数
+	float t = (pointToOrigin * segmentVector) / segmentLengthSquared;
+	t = std::clamp(t, 0.0f, 1.0f);
+
+	return segment.origin + segmentVector * t;
 }
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -247,7 +233,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 
 		Vector3 start = Transform(Transform(segment.origin, worldViewProjectionMatrix), viewportMatrix);
-		Vector3 end = Transform(Transform(segment.origin+segment.diff, worldViewProjectionMatrix), viewportMatrix);
+		Vector3 end = Transform(Transform(segment.diff, worldViewProjectionMatrix), viewportMatrix);
 		///
 		/// ↑更新処理ここまで
 		///

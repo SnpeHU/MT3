@@ -163,8 +163,22 @@ void DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMatrix, const 
 {
 	Vector3 center = plane.normal * plane.distance;
 	Vector3 perpendicular[4];
-	perpendicular[0] = plane.normal.Perpendicular(); // 法線ベクトルに垂直なベクトルを計算
-	//perpendicular[0] = plane.normal.
+	perpendicular[0] = plane.normal.Perpendicular().normalize();
+	perpendicular[1] = { -perpendicular[0].x,-perpendicular[0].y,-perpendicular[0].z };
+	perpendicular[2] = Cross(perpendicular[0], plane.normal);
+	perpendicular[3] = { -perpendicular[2].x,-perpendicular[2].y,-perpendicular[2].z };
+
+	Vector3 points[4];
+	for (int32_t index = 0;index < 4; ++index) {
+		Vector3 extend = perpendicular[index] * 2.0f; // 平面の大きさを調整
+		Vector3 point = center + extend;
+		points[index] = Transform(Transform(point, viewProjectionMatrix), viewportMatrix);
+	}
+	Novice::DrawLine(int(points[0].x), int(points[0].y), int(points[2].x), int(points[2].y), color);
+	Novice::DrawLine(int(points[1].x), int(points[1].y), int(points[2].x), int(points[2].y), color);
+	Novice::DrawLine(int(points[0].x), int(points[0].y), int(points[3].x), int(points[3].y), color);
+	Novice::DrawLine(int(points[3].x), int(points[3].y), int(points[1].x), int(points[1].y), color);
+
 
 }
 
@@ -257,8 +271,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	
 	int color = WHITE;
 
-	Sphere sphereA{ position1, 0.5f };
 	Sphere sphereB{ position2, 1.0f };
+
+	Plane plane{ {0.0f,1.0f,0.0f}, 0.0f }; // 平面の法線と距離
 
 
 	// ウィンドウの×ボタンが押されるまでループ
@@ -286,27 +301,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↑更新処理ここまで
 		///
 		
-
 		//cameraRotate.z += 0.01f; // カメラのY軸回転を更新
 		//rotate.y += 0.02f;
-
-
-		
-		if (IsCollision(sphereA, sphereB)) {
+		if (IsCollision(sphereB, plane)) {
 			color = RED;
 		}
 		else {
 			color = WHITE;
 		}
 
-
-
+		ImGui::Begin("Plane");
+		ImGui::DragFloat3("Plane.Normal", &plane.normal.x, 0.01f);
+		ImGui::DragFloat("Plane.Distance", &plane.distance, 0.01f);
+		ImGui::End();
+		plane.normal = plane.normal.normalize(); // 法線ベクトルを正規化
 		///
 		/// ↓描画処理ここから
 		///
 		DrawGrid(worldViewProjectionMatrix, viewportMatrix);
-		DrawSphere(sphereA, worldViewProjectionMatrix, viewportMatrix,WHITE);
 		DrawSphere(sphereB, worldViewProjectionMatrix, viewportMatrix, color);
+		DrawPlane(plane, worldViewProjectionMatrix, viewportMatrix, color);
 
 
 		ImGui::Begin("Sphere");

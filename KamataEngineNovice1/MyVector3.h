@@ -60,7 +60,7 @@ public:
 		return Vector3(v.x / len, v.y / len, v.z / len);
 	}
 
-	inline Vector3 normalize()
+	inline Vector3 normalize() const
 	{
 		float len = length();
 		if (len == 0) return Vector3(0, 0, 0);
@@ -75,18 +75,7 @@ public:
 		);
 	}
 
-	inline Vector3 Perpendicular(const Vector3& v) {
-		if (v.x != 0 || v.y != 0) {
-			return Vector3(-v.y, v.x, 0); // XY平面上での垂直ベクトル
-		}
-		else if (v.y != 0 || v.z != 0) {
-			return Vector3(0, -v.z, v.y); // YZ平面上での垂直ベクトル
-		}
-		else {
-			return Vector3(0, 0, 1); // Z軸に沿った垂直ベクトル
-		}
-	}
-	inline Vector3 Perpendicular() {
+	inline Vector3 Perpendicular() const {
 		if (x != 0 || y != 0) {
 			return Vector3(-y, x, 0); // XY平面上での垂直ベクトル
 		}

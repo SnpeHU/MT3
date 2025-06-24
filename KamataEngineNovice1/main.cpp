@@ -163,7 +163,7 @@ void DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMatrix, const 
 {
 	Vector3 center = plane.normal * plane.distance;
 	Vector3 perpendicular[4];
-	//perpendicular[0] = 
+	perpendicular[0] = plane.normal.Perpendicular(); // 法線ベクトルに垂直なベクトルを計算
 	//perpendicular[0] = plane.normal.
 
 }

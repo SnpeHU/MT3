@@ -37,6 +37,14 @@ struct Segment
 	Vector3 diff;
 };
 
+struct Plane
+{
+	Vector3 normal; // 法線ベクトル
+	float distance;
+};
+
+
+
 void MatrixScreenPrint(const Matrix4x4& matrix, int x, int y,const char* label) {
 
 	for (int row = 0; row < 4; ++row) {
@@ -151,6 +159,15 @@ void DrawSphere(const Sphere& sphere, const Matrix4x4& viewProjectionMatrix, con
 	}
 }
 
+void DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color)
+{
+	Vector3 center = plane.normal * plane.distance;
+	Vector3 perpendicular[4];
+	//perpendicular[0] = 
+	//perpendicular[0] = plane.normal.
+
+}
+
 Vector3 Project(const Vector3& v1,const Vector3& v2)
 {
 	// v2の長さ
@@ -209,6 +226,12 @@ bool IsCollision(const Sphere& sphereA, const Sphere& sphereB) {
 	return distance <= radiusSum;
 }
 
+bool IsCollision(const Sphere& sphere, const Plane& plane) {
+	Vector3 normal = { plane.normal.x, plane.normal.y, plane.normal.z };
+	Vector3 toSphere = { sphere.center.x - (normal.x * plane.distance), sphere.center.y - (normal.y * plane.distance), sphere.center.z - (normal.z * plane.distance) };
+	float distance = std::sqrt(toSphere.x * toSphere.x + toSphere.y * toSphere.y + toSphere.z * toSphere.z);
+	return distance <= sphere.radius;
+}
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 

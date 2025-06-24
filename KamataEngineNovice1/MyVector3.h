@@ -46,18 +46,57 @@ public:
 	{
 		x *= val, y *= val, z *= val;
 	}
-	inline float length()
+	inline float length() const
 	{
 		return sqrtf(x * x + y * y + z * z);
 	}
 	inline Vector3 Subtract(const Vector3& v1, const Vector3& v2) {
 		return Vector3(v1.x - v2.x, v1.y - v2.y, v1.z - v2.z);
 	}
+
+	inline Vector3 Normalize(const Vector3& v) {
+		float len = v.length();
+		if (len == 0) return Vector3(0, 0, 0);
+		return Vector3(v.x / len, v.y / len, v.z / len);
+	}
+
 	inline Vector3 normalize()
 	{
 		float len = length();
 		if (len == 0) return Vector3(0, 0, 0);
 		return Vector3(x / len, y / len, z / len);
+	}
+
+	inline Vector3 Cross(const Vector3& v1, const Vector3& v2) {
+		return Vector3(
+			v1.y * v2.z - v1.z * v2.y,
+			v1.z * v2.x - v1.x * v2.z,
+			v1.x * v2.y - v1.y * v2.x
+		);
+	}
+
+	inline Vector3 Perpendicular(const Vector3& v) {
+		if (v.x != 0 || v.y != 0) {
+			return Vector3(-v.y, v.x, 0); // XY平面上での垂直ベクトル
+		}
+		else if (v.y != 0 || v.z != 0) {
+			return Vector3(0, -v.z, v.y); // YZ平面上での垂直ベクトル
+		}
+		else {
+			return Vector3(0, 0, 1); // Z軸に沿った垂直ベクトル
+		}
+	}
+	inline Vector3 Perpendicular() {
+		if (x != 0 || y != 0) {
+			return Vector3(-y, x, 0); // XY平面上での垂直ベクトル
+		}
+		else if (y != 0 || z != 0) {
+			return Vector3(0, -z, y); // YZ平面上での垂直ベクトル
+		}
+		else {
+			return Vector3(0, 0, 1); // Z軸に沿った垂直ベクトル
+		}
+
 	}
 
 };

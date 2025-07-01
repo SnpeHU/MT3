@@ -246,6 +246,11 @@ bool IsCollision(const Sphere& sphere, const Plane& plane) {
 	float distance = std::sqrt(toSphere.x * toSphere.x + toSphere.y * toSphere.y + toSphere.z * toSphere.z);
 	return distance <= sphere.radius;
 }
+
+bool IsCollision(const Segment& segment, const Plane& plane) {
+
+	return false;
+}
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -271,7 +276,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	
 	int color = WHITE;
 
-	Sphere sphereB{ position2, 1.0f };
+	Segment segment{ position1, position2 }; // セグメントの始点と終点
 
 	Plane plane{ {0.0f,1.0f,0.0f}, 0.0f }; // 平面の法線と距離
 
@@ -303,7 +308,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		
 		//cameraRotate.z += 0.01f; // カメラのY軸回転を更新
 		//rotate.y += 0.02f;
-		if (IsCollision(sphereB, plane)) {
+		if (IsCollision(segment, plane)) {
 			color = RED;
 		}
 		else {
@@ -319,13 +324,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/// ↓描画処理ここから
 		///
 		DrawGrid(worldViewProjectionMatrix, viewportMatrix);
-		DrawSphere(sphereB, worldViewProjectionMatrix, viewportMatrix, color);
 		DrawPlane(plane, worldViewProjectionMatrix, viewportMatrix, color);
+	
+
 
 
 		ImGui::Begin("Sphere");
-		ImGui::DragFloat3("Center", &sphereB.center.x, 0.01f);
-		ImGui::DragFloat("Radius", &sphereB.radius, 0.01f);
 		ImGui::End();
 		ImGui::Begin("Camera");
 		ImGui::DragFloat3("Position", &cameraPostion.x, 0.01f);

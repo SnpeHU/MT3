@@ -33,8 +33,8 @@ struct Ray {
 
 struct Segment
 {
-	Vector3 origin;
-	Vector3 diff;
+	Vector3 origin;// 始点
+	Vector3 diff;// 方向ベクトル
 };
 
 struct Plane
@@ -248,9 +248,31 @@ bool IsCollision(const Sphere& sphere, const Plane& plane) {
 }
 
 bool IsCollision(const Segment& segment, const Plane& plane) {
+	float dot = segment.diff.x * plane.normal.x + segment.diff.y * plane.normal.y + segment.diff.z * plane.normal.z;
+	if (dot == 0.0f) {
+		return false;
+	}
 
-	return false;
+	float t = (plane.distance - (segment.origin.x * plane.normal.x + segment.origin.y * plane.normal.y + segment.origin.z * plane.normal.z)) / dot;
+	if (t < 0.0f || t > 1.0f) {
+		return false; // セグメントが平面と交差しない
+	}
+
+
+	return true;
 }
+
+//写一个方法，让相机围绕一个点旋转
+Vector3 OrbitCameraY(const Vector3& target, float radius, float angleY, float height) {
+	float x = target.x + radius * std::sin(angleY);
+	float y = target.y + height;
+	float z = target.z + radius * std::cos(angleY);
+	return Vector3(x, y, z);
+}
+
+
+
+
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
@@ -270,8 +292,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 cameraRotate{ 0.3f,0.0f,0.0f };
 
 
-	Vector3 position1{ -1.5f,0.0f,1.5f };
-	Vector3 position2{ 0.0f,0.0f,0.0f };
+	Vector3 position1{ -1.0f,1.0f,1.0f };
+	Vector3 position2{ 2.0f,1.0f,-2.0f };
 
 	
 	int color = WHITE;
@@ -301,13 +323,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 
-
+		Vector3 start = Transform(Transform(segment.origin, worldViewProjectionMatrix), viewportMatrix);
+		Vector3 end = Transform(Transform(segment.origin+segment.diff, worldViewProjectionMatrix), viewportMatrix);
 		///
 		/// ↑更新処理ここまで
 		///
 		
-		//cameraRotate.z += 0.01f; // カメラのY軸回転を更新
-		//rotate.y += 0.02f;
+
+		
+
 		if (IsCollision(segment, plane)) {
 			color = RED;
 		}
@@ -325,12 +349,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		DrawGrid(worldViewProjectionMatrix, viewportMatrix);
 		DrawPlane(plane, worldViewProjectionMatrix, viewportMatrix, color);
+		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), color);
 	
 
 
 
-		ImGui::Begin("Sphere");
-		ImGui::End();
+
 		ImGui::Begin("Camera");
 		ImGui::DragFloat3("Position", &cameraPostion.x, 0.01f);
 		ImGui::DragFloat3("Rotate", &cameraRotate.x, 0.01f);

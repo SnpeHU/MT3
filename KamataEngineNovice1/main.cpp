@@ -46,7 +46,11 @@ struct Plane
 struct Triangle {
 	Vector3 vertices[3]; // 三角形の頂点
 };
-
+struct AABB
+{
+	Vector3 min;
+	Vector3 max;
+};
 
 
 void MatrixScreenPrint(const Matrix4x4& matrix, int x, int y,const char* label) {
@@ -194,6 +198,33 @@ void DrawTriangle(const Triangle& triangle, const Matrix4x4& viewProjectionMatri
 	}
 }
 
+void DrawAABB(const AABB& aabb, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+	Vector3 corners[8] = {
+		{aabb.min.x, aabb.min.y, aabb.min.z},
+		{aabb.max.x, aabb.min.y, aabb.min.z},
+		{aabb.max.x, aabb.max.y, aabb.min.z},
+		{aabb.min.x, aabb.max.y, aabb.min.z},
+		{aabb.min.x, aabb.min.y, aabb.max.z},
+		{aabb.max.x, aabb.min.y, aabb.max.z},
+		{aabb.max.x, aabb.max.y, aabb.max.z},
+		{aabb.min.x, aabb.max.y, aabb.max.z}
+	};
+	for (int i = 0; i < 4; ++i) {
+		Vector3 start = Transform(Transform(corners[i], viewProjectionMatrix), viewportMatrix);
+		Vector3 end = Transform(Transform(corners[(i + 1) % 4], viewProjectionMatrix), viewportMatrix);
+		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), color);
+		
+		start = Transform(Transform(corners[i + 4], viewProjectionMatrix), viewportMatrix);
+		end = Transform(Transform(corners[(i + 1) % 4 + 4], viewProjectionMatrix), viewportMatrix);
+		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), color);
+		start = Transform(Transform(corners[i], viewProjectionMatrix), viewportMatrix);
+		end = Transform(Transform(corners[i + 4], viewProjectionMatrix), viewportMatrix);
+		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), color);
+		
+	}
+}
+
+
 Vector3 Project(const Vector3& v1,const Vector3& v2)
 {
 	// v2の長さ
@@ -312,7 +343,94 @@ bool IsCollision(const Triangle& triangle, const Segment& segment) {
 	return true; // 衝突している
 }
 
+bool IsCollision(const AABB& aabb1, const AABB& aabb2) {
+	// AABBの衝突判定
+	return (aabb1.min.x <= aabb2.max.x && aabb1.max.x >= aabb2.min.x &&
+			aabb1.min.y <= aabb2.max.y && aabb1.max.y >= aabb2.min.y &&
+			aabb1.min.z <= aabb2.max.z && aabb1.max.z >= aabb2.min.z);
+}
 
+void UpdateCameraWithMouse(Vector3& cameraRotate, Vector3& cameraPosition, const Vector3& target) {
+	(void)target;
+
+	static int prevMouseX = 0, prevMouseY = 0;
+	static bool firstMouse = true;
+
+	int mouseX, mouseY;
+	Novice::GetMousePosition(&mouseX, &mouseY);
+
+	// 鼠标控制摄像机旋转
+	if (Novice::IsPressMouse(0)) {
+		if (firstMouse) {
+			prevMouseX = mouseX;
+			prevMouseY = mouseY;
+			firstMouse = false;
+		}
+		float deltaX = float(mouseX - prevMouseX);
+		float deltaY = float(mouseY - prevMouseY);
+		const float sensitivity = 0.005f;
+
+		cameraRotate.y += deltaX * sensitivity;
+		cameraRotate.x += deltaY * sensitivity; 
+
+		// 限制垂直旋转角度，避免翻转
+		const float maxPitch = pi_v<float> / 2.0f - 0.1f;
+		if (cameraRotate.x > maxPitch) cameraRotate.x = maxPitch;
+		if (cameraRotate.x < -maxPitch) cameraRotate.x = -maxPitch;
+
+		prevMouseX = mouseX;
+		prevMouseY = mouseY;
+	}
+	else {
+		firstMouse = true;
+	}
+
+	// WASD键控制摄像机位置移动
+	const float moveSpeed = 0.1f;
+
+	// 计算摄像机的前、右、上方向向量
+	Vector3 forward = {
+		std::cos(cameraRotate.x) * std::sin(cameraRotate.y),
+		std::sin(cameraRotate.x),
+		std::cos(cameraRotate.x) * std::cos(cameraRotate.y)
+	};
+
+	Vector3 right = {
+		std::sin(cameraRotate.y - pi_v<float> / 2.0f),
+		0.0f,
+		std::cos(cameraRotate.y - pi_v<float> / 2.0f)
+	};
+
+	Vector3 up = { 0.0f, 1.0f, 0.0f };
+
+	// WASD控制移动
+	if (Novice::CheckHitKey(DIK_W)) { 
+		cameraPosition.x += forward.x * moveSpeed;
+		cameraPosition.y += forward.y * moveSpeed;
+		cameraPosition.z += forward.z * moveSpeed;
+	}
+	if (Novice::CheckHitKey(DIK_S)) { 
+		cameraPosition.x -= forward.x * moveSpeed;
+		cameraPosition.y -= forward.y * moveSpeed;
+		cameraPosition.z -= forward.z * moveSpeed;
+	}
+	if (Novice::CheckHitKey(DIK_D)) {
+		cameraPosition.x -= right.x * moveSpeed;
+		cameraPosition.z -= right.z * moveSpeed;
+	}
+
+	if (Novice::CheckHitKey(DIK_A)) {
+		cameraPosition.x += right.x * moveSpeed;
+		cameraPosition.z += right.z * moveSpeed;
+	}
+
+	if (Novice::CheckHitKey(DIK_Q)) {
+		cameraPosition.y += moveSpeed;
+	}
+	if (Novice::CheckHitKey(DIK_E)) {
+		cameraPosition.y -= moveSpeed;
+	}
+}
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -329,20 +447,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 scale = { 1.0f,1.0f,1.0f };
 	Vector3 translate = { 0.0f,0.0f,0.0f };
 
-	Vector3 cameraPostion{ 0.0f,1.0f,-10.0f };
-	Vector3 cameraRotate{ 0.0f,0.0f,0.0f };
+	Vector3 cameraPostion{ 4.5f,3.0f,-7.5f };
+	Vector3 cameraRotate{ 0.26f,-0.5f,0.0f };
+	Vector3 cameraTarget{ 0.0f, 0.0f, 0.0f };
 
-
-	Vector3 position1{ -1.0f,1.0f,1.0f };
-	Vector3 position2{ 0.0f,0.0f,-2.0f };
-
-	
 	int color = WHITE;
 
-	Segment segment{ position1, position2 };
-	Triangle triangle{ { { -1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 0.5f, 1.0f, 0.5f } } }; // 三角形の頂点
+	AABB aabb1{
+		{ -1.0f, 1.0f, -1.0f }, // 最小点
+		{ 0.2f, 0.2f, 0.2f } // 最大点
+	};
+	AABB aabb2{
+		{ 0.0f, 0.0f, 0.0f }, // 最小点
+		{ 1.0f, 1.0f, 1.0f } // 最大点
+	};
 
-	//Plane plane{ {0.0f,1.0f,0.0f}, 0.0f }; // 平面の法線と距離
 
 
 	// ウィンドウの×ボタンが押されるまでループ
@@ -357,6 +476,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓更新処理ここから
 		///
+		UpdateCameraWithMouse(cameraRotate, cameraPostion, cameraTarget);
+
 				//回転
 		Matrix4x4 worldMatrix = MakeAffineMatrix(scale, rotate, translate);
 		Matrix4x4 cameraMatrix = MakeAffineMatrix({ 1.0f,1.0f,1.0f }, cameraRotate, cameraPostion);
@@ -365,8 +486,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 		Matrix4x4 viewportMatrix = MakeViewportMatrix(0, 0, float(kWindowWidth), float(kWindowHeight), 0.0f, 1.0f);
 
-		Vector3 start = Transform(Transform(segment.origin, worldViewProjectionMatrix), viewportMatrix);
-		Vector3 end = Transform(Transform(segment.origin+segment.diff, worldViewProjectionMatrix), viewportMatrix);
+		
 		///
 		/// ↑更新処理ここまで
 		///
@@ -374,7 +494,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		
 
-		if (IsCollision(triangle,segment)) {
+		if (IsCollision(aabb1, aabb2)) {
 			color = RED;
 		}
 		else {
@@ -388,11 +508,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		DrawGrid(worldViewProjectionMatrix, viewportMatrix);
 
-		
-		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), color);
-		DrawTriangle(triangle, worldViewProjectionMatrix, viewportMatrix, color);
-	
-
+		DrawAABB(aabb1, worldViewProjectionMatrix, viewportMatrix, color);
+		DrawAABB(aabb2, worldViewProjectionMatrix, viewportMatrix, color);
 
 
 
@@ -400,13 +517,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::DragFloat3("Position", &cameraPostion.x, 0.01f);
 		ImGui::DragFloat3("Rotate", &cameraRotate.x, 0.01f);
 		ImGui::End();
-		ImGui::Begin("Segment");
-		ImGui::DragFloat3("Origin", &segment.origin.x, 0.01f);
+		ImGui::Begin("AABB1");
+		ImGui::DragFloat3("min", &aabb1.min.x, 0.01f);
+		ImGui::DragFloat3("max", &aabb1.max.x, 0.01f);
 		ImGui::End();
-		ImGui::Begin("Triangle");
-		ImGui::DragFloat3("Vertex0", &triangle.vertices[0].x, 0.01f);
-		ImGui::DragFloat3("Vertex1", &triangle.vertices[1].x, 0.01f);
-		ImGui::DragFloat3("Vertex2", &triangle.vertices[2].x, 0.01f);
+		ImGui::Begin("AABB2");
+		ImGui::DragFloat3("min", &aabb2.min.x, 0.01f);
+		ImGui::DragFloat3("max", &aabb2.max.x, 0.01f);
+		
 		ImGui::End();
 
 		///

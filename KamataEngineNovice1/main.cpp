@@ -43,6 +43,10 @@ struct Plane
 	float distance;
 };
 
+struct Triangle {
+	Vector3 vertices[3]; // 三角形の頂点
+};
+
 
 
 void MatrixScreenPrint(const Matrix4x4& matrix, int x, int y,const char* label) {
@@ -182,6 +186,14 @@ void DrawPlane(const Plane& plane, const Matrix4x4& viewProjectionMatrix, const 
 
 }
 
+void DrawTriangle(const Triangle& triangle, const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix, uint32_t color) {
+	for (int i = 0; i < 3; ++i) {
+		Vector3 start = Transform(Transform(triangle.vertices[i], viewProjectionMatrix), viewportMatrix);
+		Vector3 end = Transform(Transform(triangle.vertices[(i + 1) % 3], viewProjectionMatrix), viewportMatrix);
+		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), color);
+	}
+}
+
 Vector3 Project(const Vector3& v1,const Vector3& v2)
 {
 	// v2の長さ
@@ -257,19 +269,48 @@ bool IsCollision(const Segment& segment, const Plane& plane) {
 	if (t < 0.0f || t > 1.0f) {
 		return false; // セグメントが平面と交差しない
 	}
-
-
 	return true;
 }
 
-//写一个方法，让相机围绕一个点旋转
-Vector3 OrbitCameraY(const Vector3& target, float radius, float angleY, float height) {
-	float x = target.x + radius * std::sin(angleY);
-	float y = target.y + height;
-	float z = target.z + radius * std::cos(angleY);
-	return Vector3(x, y, z);
-}
+bool IsCollision(const Triangle& triangle, const Segment& segment) {
+	// 三角形の辺を計算
+	Vector3 edge0 = triangle.vertices[1] - triangle.vertices[0];
+	Vector3 edge1 = triangle.vertices[2] - triangle.vertices[0];
+	Vector3 normal = Cross(edge0, edge1).normalize();
+	// セグメントの始点から三角形の平面への距離を計算
+	float dot = Dot(normal, segment.diff);
+	if (dot == 0.0f) {
+		return false;
+	}
+	// セグメントの始点から三角形の平面への距離を計算
+	float t = (Dot(normal, triangle.vertices[0]) - Dot(normal, segment.origin)) / dot;
+	if (t < 0.0f || t > 1.0f) {
+		return false; // セグメントが三角形の平面と交差しない
+	}
+	// セグメントの交点を計算
+	Vector3 intersection = segment.origin + segment.diff * t;
+	// 三角形のバリセントリック座標を計算
+	Vector3 v0 = triangle.vertices[1] - triangle.vertices[0];
+	Vector3 v1 = triangle.vertices[2] - triangle.vertices[0];
+	Vector3 v2 = intersection - triangle.vertices[0];
+	float d00 = Dot(v0, v0);
+	float d01 = Dot(v0, v1);
+	float d11 = Dot(v1, v1);
+	float d20 = Dot(v2, v0);
+	float d21 = Dot(v2, v1);
+	float denom = d00 * d11 - d01 * d01;
+	if (denom == 0.0f) {
+		return false; 
+	}
+	float v = (d11 * d20 - d01 * d21) / denom;
+	float w = (d00 * d21 - d01 * d20) / denom;
+	float u = 1.0f - v - w;
+	if (u < 0.0f || v < 0.0f || w < 0.0f) {
+		return false; // セグメントの交点が三角形の外側にある
+	}
 
+	return true; // 衝突している
+}
 
 
 
@@ -288,19 +329,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 scale = { 1.0f,1.0f,1.0f };
 	Vector3 translate = { 0.0f,0.0f,0.0f };
 
-	Vector3 cameraPostion{ 0.0f,4.0f,-10.0f };
-	Vector3 cameraRotate{ 0.3f,0.0f,0.0f };
+	Vector3 cameraPostion{ 0.0f,1.0f,-10.0f };
+	Vector3 cameraRotate{ 0.0f,0.0f,0.0f };
 
 
 	Vector3 position1{ -1.0f,1.0f,1.0f };
-	Vector3 position2{ 2.0f,1.0f,-2.0f };
+	Vector3 position2{ 0.0f,0.0f,-2.0f };
 
 	
 	int color = WHITE;
 
-	Segment segment{ position1, position2 }; // セグメントの始点と終点
+	Segment segment{ position1, position2 };
+	Triangle triangle{ { { -1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 0.0f }, { 0.5f, 1.0f, 0.5f } } }; // 三角形の頂点
 
-	Plane plane{ {0.0f,1.0f,0.0f}, 0.0f }; // 平面の法線と距離
+	//Plane plane{ {0.0f,1.0f,0.0f}, 0.0f }; // 平面の法線と距離
 
 
 	// ウィンドウの×ボタンが押されるまでループ
@@ -332,24 +374,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		
 
-		if (IsCollision(segment, plane)) {
+		if (IsCollision(triangle,segment)) {
 			color = RED;
 		}
 		else {
 			color = WHITE;
 		}
 
-		ImGui::Begin("Plane");
-		ImGui::DragFloat3("Plane.Normal", &plane.normal.x, 0.01f);
-		ImGui::DragFloat("Plane.Distance", &plane.distance, 0.01f);
-		ImGui::End();
-		plane.normal = plane.normal.normalize(); // 法線ベクトルを正規化
+
+		//plane.normal = plane.normal.normalize(); // 法線ベクトルを正規化
 		///
 		/// ↓描画処理ここから
 		///
 		DrawGrid(worldViewProjectionMatrix, viewportMatrix);
-		DrawPlane(plane, worldViewProjectionMatrix, viewportMatrix, color);
+
+		
 		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), color);
+		DrawTriangle(triangle, worldViewProjectionMatrix, viewportMatrix, color);
 	
 
 
@@ -359,6 +400,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::DragFloat3("Position", &cameraPostion.x, 0.01f);
 		ImGui::DragFloat3("Rotate", &cameraRotate.x, 0.01f);
 		ImGui::End();
+		ImGui::Begin("Segment");
+		ImGui::DragFloat3("Origin", &segment.origin.x, 0.01f);
+		ImGui::End();
+		ImGui::Begin("Triangle");
+		ImGui::DragFloat3("Vertex0", &triangle.vertices[0].x, 0.01f);
+		ImGui::DragFloat3("Vertex1", &triangle.vertices[1].x, 0.01f);
+		ImGui::DragFloat3("Vertex2", &triangle.vertices[2].x, 0.01f);
+		ImGui::End();
+
 		///
 		/// ↑描画処理ここまで
 		///

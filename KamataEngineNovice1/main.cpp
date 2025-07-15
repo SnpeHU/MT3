@@ -514,6 +514,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 		ImGui::Begin("Camera");
+		ImGui::Text("Camera Control:WASD/MOUSE");
 		ImGui::DragFloat3("Position", &cameraPostion.x, 0.01f);
 		ImGui::DragFloat3("Rotate", &cameraRotate.x, 0.01f);
 		ImGui::End();

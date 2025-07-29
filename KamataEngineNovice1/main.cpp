@@ -483,10 +483,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{ 0.2f, 0.2f, 0.2f } // 最大点
 	};
 
-	Segment segment1{
-		{ -1.0f, -1.0f, -1.0f }, // 始点
-		{ 0.2f, 0.2f, 0.2f } // 終点
-	};
+	Vector3 position1{ -1.0f,1.0f,1.0f };
+	Vector3 position2{ 0.0f,0.0f,-2.0f };
+
+	Segment segment{ position1, position2 };
 
 
 

@@ -368,12 +368,84 @@ bool IsCollision(const AABB& aabb, const Sphere& sphere) {
 }
 
 bool IsCollision(const AABB& aabb, const Segment& segment) {
-	// AABBとセグメントの衝突判定
-	Vector3 closestPoint = ClosestPoint(segment.origin, segment);
-	return (closestPoint.x >= aabb.min.x && closestPoint.x <= aabb.max.x &&
-			closestPoint.y >= aabb.min.y && closestPoint.y <= aabb.max.y &&
-			closestPoint.z >= aabb.min.z && closestPoint.z <= aabb.max.z);
+	// セグメントの方向ベクトル
+	Vector3 direction = segment.diff;
+	Vector3 segmentEnd = segment.origin + direction;
+	
+	// AABBとセグメントの交差判定にスラブ法を使用
+	float tMin = 0.0f;
+	float tMax = 1.0f;
+	
+	// X軸方向の交差判定
+	if (std::abs(direction.x) < 1e-6f) {
+		// セグメントがX軸に平行
+		if (segment.origin.x < aabb.min.x || segment.origin.x > aabb.max.x) {
+			return false;
+		}
+	} else {
+		float t1 = (aabb.min.x - segment.origin.x) / direction.x;
+		float t2 = (aabb.max.x - segment.origin.x) / direction.x;
+		
+		if (t1 > t2) {
+			float temp = t1;
+			t1 = t2;
+			t2 = temp;
+		}
+		
+		if (t1 > tMin) tMin = t1;
+		if (t2 < tMax) tMax = t2;
+		
+		if (tMin > tMax) return false;
+	}
+	
+	// Y軸方向の交差判定
+	if (std::abs(direction.y) < 1e-6f) {
+		// セグメントがY軸に平行
+		if (segment.origin.y < aabb.min.y || segment.origin.y > aabb.max.y) {
+			return false;
+		}
+	} else {
+		float t1 = (aabb.min.y - segment.origin.y) / direction.y;
+		float t2 = (aabb.max.y - segment.origin.y) / direction.y;
+		
+		if (t1 > t2) {
+			float temp = t1;
+			t1 = t2;
+			t2 = temp;
+		}
+		
+		if (t1 > tMin) tMin = t1;
+		if (t2 < tMax) tMax = t2;
+		
+		if (tMin > tMax) return false;
+	}
+	
+	// Z軸方向の交差判定
+	if (std::abs(direction.z) < 1e-6f) {
+		// セグメントがZ軸に平行
+		if (segment.origin.z < aabb.min.z || segment.origin.z > aabb.max.z) {
+			return false;
+		}
+	} else {
+		float t1 = (aabb.min.z - segment.origin.z) / direction.z;
+		float t2 = (aabb.max.z - segment.origin.z) / direction.z;
+		
+		if (t1 > t2) {
+			float temp = t1;
+			t1 = t2;
+			t2 = temp;
+		}
+		
+		if (t1 > tMin) tMin = t1;
+		if (t2 < tMax) tMax = t2;
+		
+		if (tMin > tMax) return false;
+	}
+	
+	// セグメントの範囲内で交差があるかチェック
+	return tMin <= 1.0f && tMax >= 0.0f;
 }
+
 void UpdateCameraWithMouse(Vector3& cameraRotate, Vector3& cameraPosition, const Vector3& target) {
 	(void)target;
 
@@ -479,12 +551,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	int color = WHITE;
 
 	AABB aabb1{
-		{ -1.0f, -1.0f, -1.0f }, // 最小点
-		{ 0.2f, 0.2f, 0.2f } // 最大点
+		{ -0.5f,-0.5f,-0.5f }, // 最小点
+		{ 0.5f, 0.5f, 0.5f } // 最大点
 	};
 
-	Vector3 position1{ -1.0f,1.0f,1.0f };
-	Vector3 position2{ 0.0f,0.0f,-2.0f };
+	Vector3 position1{ -0.7f,0.3f,0.0f };
+	Vector3 position2{ 2.0f,-0.5f,0.0f };
 
 	Segment segment1{ position1, position2 };
 
@@ -527,6 +599,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↑更新処理ここまで
 		///
+		Vector3 start = Transform(Transform(segment1.origin, worldViewProjectionMatrix), viewportMatrix);
+		Vector3 end = Transform(Transform(segment1.origin + segment1.diff, worldViewProjectionMatrix), viewportMatrix);
 		
 
 		
@@ -548,7 +622,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		
 		
 		DrawAABB(aabb1, worldViewProjectionMatrix, viewportMatrix, color);
-		Novice::DrawLine(int(segment1.origin.x), int(segment1.origin.y), int(segment1.diff.x), int(segment1.diff.y), color);
+		Novice::DrawLine(int(start.x), int(start.y), int(end.x), int(end.y), color);
 		
 
 

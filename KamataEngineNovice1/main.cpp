@@ -427,7 +427,7 @@ void UpdateCameraWithMouse(Vector3& cameraRotate, Vector3& cameraPosition, const
 
 	Vector3 up = { 0.0f, 1.0f, 0.0f };
 
-	// WASD控制移动
+
 	if (Novice::CheckHitKey(DIK_W)) { 
 		cameraPosition.x += forward.x * moveSpeed;
 		cameraPosition.y += forward.y * moveSpeed;
@@ -466,6 +466,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	char keys[256] = {0};
 	char preKeys[256] = {0};
 
+	bool isControl = false;
 	//
 	Vector3 rotate = { 0.0f,0.0f,0.0f };
 	Vector3 scale = { 1.0f,1.0f,1.0f };
@@ -503,7 +504,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		/// ↓更新処理ここから
 		///
-		UpdateCameraWithMouse(cameraRotate, cameraPostion, cameraTarget);
+		
+		if (Novice::CheckHitKey(DIK_T))
+		{
+			isControl = !isControl;
+		}
+		if (isControl)
+		{
+			UpdateCameraWithMouse(cameraRotate, cameraPostion, cameraTarget);
+		}
+		
 
 				//回転
 		Matrix4x4 worldMatrix = MakeAffineMatrix(scale, rotate, translate);
@@ -535,15 +545,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 		DrawGrid(worldViewProjectionMatrix, viewportMatrix);
 
-		DrawAABB(aabb1, worldViewProjectionMatrix, viewportMatrix, color);
 		
-	
+		
+		DrawAABB(aabb1, worldViewProjectionMatrix, viewportMatrix, color);
+		Novice::DrawLine(int(segment1.origin.x), int(segment1.origin.y), int(segment1.diff.x), int(segment1.diff.y), color);
 		
 
 
 
 		ImGui::Begin("Camera");
-		ImGui::Text("Camera Control:WASD/MOUSE");
+		ImGui::Text("Camera Control:WASDQE/MOUSE/T");
 		ImGui::DragFloat3("Position", &cameraPostion.x, 0.01f);
 		ImGui::DragFloat3("Rotate", &cameraRotate.x, 0.01f);
 		ImGui::End();
@@ -551,11 +562,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::DragFloat3("min", &aabb1.min.x, 0.01f);
 		ImGui::DragFloat3("max", &aabb1.max.x, 0.01f);
 		ImGui::End();
-		ImGui::Begin("");
-
-
-
-		
+		ImGui::Begin("segment1");
+		ImGui::DragFloat3("origin", &segment1.origin.x, 0.01f);
+		ImGui::DragFloat3("diff", &segment1.diff.x, 0.01f);
+	
 		ImGui::End();
 
 		///

@@ -367,6 +367,13 @@ bool IsCollision(const AABB& aabb, const Sphere& sphere) {
 	return distanceSquared <= (sphere.radius );
 }
 
+bool IsCollision(const AABB& aabb, const Segment& segment) {
+	// AABBとセグメントの衝突判定
+	Vector3 closestPoint = ClosestPoint(segment.origin, segment);
+	return (closestPoint.x >= aabb.min.x && closestPoint.x <= aabb.max.x &&
+			closestPoint.y >= aabb.min.y && closestPoint.y <= aabb.max.y &&
+			closestPoint.z >= aabb.min.z && closestPoint.z <= aabb.max.z);
+}
 void UpdateCameraWithMouse(Vector3& cameraRotate, Vector3& cameraPosition, const Vector3& target) {
 	(void)target;
 
@@ -475,10 +482,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{ 0.2f, 0.2f, 0.2f } // 最大点
 	};
 
-	Sphere sphere1{
-		{ 0.0f, 0.0f, 0.0f }, // 中心
-		1.0f // 半径
+	Segment segment1{
+		{ -1.0f, -1.0f, -1.0f }, // 始点
+		{ 0.2f, 0.2f, 0.2f } // 終点
 	};
+
+
 
 
 
@@ -512,7 +521,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		
 
-		if (IsCollision(aabb1, sphere1)) {
+		if (IsCollision(aabb1, segment1)) {
 			color = RED;
 		}
 		else {
@@ -527,7 +536,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		DrawGrid(worldViewProjectionMatrix, viewportMatrix);
 
 		DrawAABB(aabb1, worldViewProjectionMatrix, viewportMatrix, color);
-		DrawSphere(sphere1, worldViewProjectionMatrix, viewportMatrix, color);
+		
+	
 		
 
 
@@ -541,9 +551,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::DragFloat3("min", &aabb1.min.x, 0.01f);
 		ImGui::DragFloat3("max", &aabb1.max.x, 0.01f);
 		ImGui::End();
-		ImGui::Begin("Sphere");
-		ImGui::DragFloat3("Center", &sphere1.center.x, 0.01f);
-		ImGui::DragFloat("Radius", &sphere1.radius, 0.01f);
+		ImGui::Begin("");
+
 
 
 		

@@ -486,7 +486,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Vector3 position1{ -1.0f,1.0f,1.0f };
 	Vector3 position2{ 0.0f,0.0f,-2.0f };
 
-	Segment segment{ position1, position2 };
+	Segment segment1{ position1, position2 };
 
 
 

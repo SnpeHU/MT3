@@ -1,10 +1,15 @@
 #include <Novice.h>
 #include "MyVector3.h"
 #include "MyMatrix4x4.h"
+
 #include <numbers>
 
+
 #include <imgui.h>
+#include <algorithm>
+
 using namespace std::numbers;
+
 
 const char kWindowTitle[] = "GC2A_04_コウ_ホウケイ_タイトル";
 
@@ -350,6 +355,18 @@ bool IsCollision(const AABB& aabb1, const AABB& aabb2) {
 			aabb1.min.z <= aabb2.max.z && aabb1.max.z >= aabb2.min.z);
 }
 
+bool IsCollision(const AABB& aabb, const Sphere& sphere) {
+	// AABBと球の衝突判定
+	Vector3 closestPoint = {
+		std::clamp(sphere.center.x, aabb.min.x, aabb.max.x),
+		std::clamp(sphere.center.y, aabb.min.y, aabb.max.y),
+		std::clamp(sphere.center.z, aabb.min.z, aabb.max.z)
+
+	};
+	float distanceSquared = Length(closestPoint, sphere.center);
+	return distanceSquared <= (sphere.radius );
+}
+
 void UpdateCameraWithMouse(Vector3& cameraRotate, Vector3& cameraPosition, const Vector3& target) {
 	(void)target;
 
@@ -454,12 +471,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	int color = WHITE;
 
 	AABB aabb1{
-		{ -1.0f, 1.0f, -1.0f }, // 最小点
+		{ -1.0f, -1.0f, -1.0f }, // 最小点
 		{ 0.2f, 0.2f, 0.2f } // 最大点
 	};
-	AABB aabb2{
-		{ 0.0f, 0.0f, 0.0f }, // 最小点
-		{ 1.0f, 1.0f, 1.0f } // 最大点
+
+	Sphere sphere1{
+		{ 0.0f, 0.0f, 0.0f }, // 中心
+		1.0f // 半径
 	};
 
 
@@ -494,7 +512,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		
 
-		if (IsCollision(aabb1, aabb2)) {
+		if (IsCollision(aabb1, sphere1)) {
 			color = RED;
 		}
 		else {
@@ -509,7 +527,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		DrawGrid(worldViewProjectionMatrix, viewportMatrix);
 
 		DrawAABB(aabb1, worldViewProjectionMatrix, viewportMatrix, color);
-		DrawAABB(aabb2, worldViewProjectionMatrix, viewportMatrix, color);
+		DrawSphere(sphere1, worldViewProjectionMatrix, viewportMatrix, color);
+		
 
 
 
@@ -522,9 +541,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::DragFloat3("min", &aabb1.min.x, 0.01f);
 		ImGui::DragFloat3("max", &aabb1.max.x, 0.01f);
 		ImGui::End();
-		ImGui::Begin("AABB2");
-		ImGui::DragFloat3("min", &aabb2.min.x, 0.01f);
-		ImGui::DragFloat3("max", &aabb2.max.x, 0.01f);
+		ImGui::Begin("Sphere");
+		ImGui::DragFloat3("Center", &sphere1.center.x, 0.01f);
+		ImGui::DragFloat("Radius", &sphere1.radius, 0.01f);
+
+
 		
 		ImGui::End();
 
